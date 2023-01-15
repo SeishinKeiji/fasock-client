@@ -1,4 +1,4 @@
-import { Button, Flex, FormControl, FormErrorMessage, FormLabel, Heading, Input, InputGroup, InputRightElement, Link, Text, VStack } from "@chakra-ui/react";
+import { Button, Flex, FormControl, FormErrorMessage, FormHelperText, FormLabel, Heading, Input, InputGroup, InputRightElement, Link, Text, VStack } from "@chakra-ui/react";
 import Head from "next/head";
 import NextLink from "next/link";
 import { useState } from "react";
@@ -6,6 +6,9 @@ import { FiLogIn } from "react-icons/fi";
 
 export default function Home() {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  // turn on error if on submit the email field is empty
+  const [isEmailError, setIsEmailError] = useState(false);
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
 
@@ -19,12 +22,15 @@ export default function Home() {
       </Head>
       <Flex minH="100vh" h="full" justifyContent="center" alignItems="center">
         <VStack bg="ThreeDDarkShadow" p="4" rounded="md" maxW="90%" w="md">
-          <Heading>Login Form</Heading>
-          <FormControl isRequired>
+          <Heading>Register Form</Heading>
+          <FormControl>
+            <FormLabel>Username</FormLabel>
+            <Input type="text" onChange={(e) => setUsername(e.target.value)} />
+          </FormControl>
+          <FormControl isRequired isInvalid={isEmailError}>
             <FormLabel>Email address</FormLabel>
             <Input type="email" onChange={(e) => setEmail(e.target.value)} />
-            {/* turn on error if on submit the email field is empty */}
-            {email === "" && <FormErrorMessage>Email is required.</FormErrorMessage>}
+            {!isEmailError ? <FormHelperText>We'll never share your email.</FormHelperText> : <FormErrorMessage>Email is required.</FormErrorMessage>}
           </FormControl>
           <FormControl isRequired>
             <FormLabel>Password</FormLabel>
@@ -38,12 +44,12 @@ export default function Home() {
             </InputGroup>
           </FormControl>
           <Button leftIcon={<FiLogIn />} colorScheme="purple" variant="solid" alignSelf="stretch">
-            Sign In
+            Sign Up
           </Button>
           <Text>
-            Don't have an account?{" "}
-            <Link as={NextLink} href="/register">
-              Sign Up
+            Already have an account?{" "}
+            <Link as={NextLink} href="/">
+              Sign In
             </Link>
           </Text>
         </VStack>
