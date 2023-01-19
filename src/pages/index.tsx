@@ -1,14 +1,8 @@
-import { Button, Flex, FormControl, FormErrorMessage, FormLabel, Heading, Input, InputGroup, InputRightElement, Link, Text, VStack } from "@chakra-ui/react";
+import { Button, Card, CardBody, CardHeader, Heading, Hide, HStack, Image, Img, SimpleGrid, Stack, Text, VStack } from "@chakra-ui/react";
 import Head from "next/head";
 import NextLink from "next/link";
-import { useState } from "react";
-import { FiLogIn } from "react-icons/fi";
 
 export default function Home() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [show, setShow] = useState(false);
-
   return (
     <>
       <Head>
@@ -17,37 +11,97 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Flex minH="100vh" h="full" justifyContent="center" alignItems="center">
-        <VStack bg="ThreeDDarkShadow" p="4" rounded="md" maxW="90%" w="md">
-          <Heading>Login Form</Heading>
-          <FormControl isRequired>
-            <FormLabel>Email address</FormLabel>
-            <Input type="email" onChange={(e) => setEmail(e.target.value)} />
-            {/* turn on error if on submit the email field is empty */}
-            {email === "" && <FormErrorMessage>Email is required.</FormErrorMessage>}
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>Password</FormLabel>
-            <InputGroup size="md">
-              <Input pr="4.5rem" type={show ? "text" : "password"} placeholder="Enter password" onChange={(e) => setPassword(e.target.value)} />
-              <InputRightElement width="4.5rem">
-                <Button h="1.75rem" size="sm" onClick={() => setShow(!show)}>
-                  {show ? "Hide" : "Show"}
-                </Button>
-              </InputRightElement>
-            </InputGroup>
-          </FormControl>
-          <Button leftIcon={<FiLogIn />} colorScheme="purple" variant="solid" alignSelf="stretch">
-            Sign In
-          </Button>
-          <Text>
-            Don't have an account?{" "}
-            <Link as={NextLink} href="/register">
-              Sign Up
-            </Link>
-          </Text>
+      <Stack p="10" gap="10">
+        <HStack alignSelf="center">
+          <VStack alignItems="start" maxWidth="xl">
+            <Heading>Fasock chat-app</Heading>
+            <Text>Simple chat-app that make easy-to-use and secure message, anywhere, with our user-friendly chat application</Text>
+            <Button colorScheme="blue">Try it now!</Button>
+          </VStack>
+          <Hide below="sm">
+            <Img src="/banner.svg" width={350} height={350} />
+          </Hide>
+        </HStack>
+
+        <VStack gap="10">
+          <VStack>
+            <Heading>Tech Stack</Heading>
+            <HStack wrap="wrap" gap="5">
+              <Card maxW="sm" align="center">
+                <CardHeader pb="0.5">
+                  <Img src="/redis.svg" alt="Redis logo" w="32" h="32" borderRadius="lg" />
+                </CardHeader>
+                <CardBody pt="0.5">
+                  <Stack mt="6" spacing="3">
+                    <Heading size="md">Redis</Heading>
+                    <Text>in-memory data store used by millions of developers as a secondary database</Text>
+                  </Stack>
+                </CardBody>
+              </Card>
+              <Card maxW="sm" align="center">
+                <CardHeader pb="0.5">
+                  <Img src="/postgresql.svg" alt="PostgresQL logo" w="32" h="32" borderRadius="lg" />
+                </CardHeader>
+                <CardBody pt="0.5">
+                  <Stack mt="6" spacing="3">
+                    <Heading size="md">PostgresQL</Heading>
+                    <Text>The World's Most Advanced Open Source Relational Database</Text>
+                  </Stack>
+                </CardBody>
+              </Card>
+              <Card maxW="sm" align="center">
+                <CardHeader pb="0.5">
+                  <Img src="/typeorm.svg" alt="TypeORM logo" w="32" h="32" borderRadius="lg" />
+                </CardHeader>
+                <CardBody pt="0.5">
+                  <Stack mt="6" spacing="3">
+                    <Heading size="md">TypeORM</Heading>
+                    <Text>Best lightweight Object Relational Mapping for Node.js application.</Text>
+                  </Stack>
+                </CardBody>
+              </Card>
+            </HStack>
+          </VStack>
+          <VStack>
+            <Heading>Core/Main Tech Stack</Heading>
+            <HStack wrap="wrap" gap="5">
+              <Card maxW="sm" align="center">
+                <CardHeader pb="0.5">
+                  <Img src="/next.svg" alt="NextJs logo" w="32" h="32" borderRadius="lg" />
+                </CardHeader>
+                <CardBody pt="0.5">
+                  <Stack mt="6" spacing="3">
+                    <Heading size="md">NextJs</Heading>
+                    <Text>Most popular React Framework for the web, Used by some of the world's largest companies.</Text>
+                  </Stack>
+                </CardBody>
+              </Card>
+              <Card maxW="sm" align="center">
+                <CardHeader pb="0.5">
+                  <Img src="/fastify.svg" alt="Fastify logo" w="32" h="32" borderRadius="lg" />
+                </CardHeader>
+                <CardBody pt="0.5">
+                  <Stack mt="6" spacing="3">
+                    <Heading size="md">Fastify</Heading>
+                    <Text>Fast and modern web api framework also known as beauty ecosystem.</Text>
+                  </Stack>
+                </CardBody>
+              </Card>
+              <Card maxW="sm" align="center">
+                <CardHeader pb="0.5">
+                  <Img src="/socket-io.svg" alt="Socket.IO logo" w="32" h="32" borderRadius="lg" />
+                </CardHeader>
+                <CardBody pt="0.5">
+                  <Stack mt="6" spacing="3">
+                    <Heading size="md">Socket.IO</Heading>
+                    <Text>Bidirectional and low-latency communication for every platform.</Text>
+                  </Stack>
+                </CardBody>
+              </Card>
+            </HStack>
+          </VStack>
         </VStack>
-      </Flex>
+      </Stack>
     </>
   );
 }
