@@ -43,7 +43,7 @@ export default function Home() {
               </InputRightElement>
             </InputGroup>
           </FormControl>
-          <Button leftIcon={<FiLogIn />} colorScheme="purple" variant="solid" alignSelf="stretch">
+          <Button leftIcon={<FiLogIn />} colorScheme="blue" variant="solid" alignSelf="stretch">
             Sign Up
           </Button>
           <Text>

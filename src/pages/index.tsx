@@ -1,4 +1,4 @@
-import { Button, Card, CardBody, CardHeader, Heading, Hide, HStack, Image, Img, SimpleGrid, Stack, Text, VStack } from "@chakra-ui/react";
+import { Button, Card, CardBody, CardHeader, Heading, Hide, HStack, Img, Link, Stack, Text, VStack } from "@chakra-ui/react";
 import Head from "next/head";
 import NextLink from "next/link";
 
@@ -16,7 +16,11 @@ export default function Home() {
           <VStack alignItems="start" maxWidth="xl">
             <Heading>Fasock chat-app</Heading>
             <Text>Simple chat-app that make easy-to-use and secure message, anywhere, with our user-friendly chat application</Text>
-            <Button colorScheme="blue">Try it now!</Button>
+            <Button colorScheme="blue">
+              <Link href="/login" as={NextLink} style={{ textDecoration: "none" }}>
+                Try it now!
+              </Link>
+            </Button>
           </VStack>
           <Hide below="sm">
             <Img src="/banner.svg" width={350} height={350} />
@@ -25,45 +29,7 @@ export default function Home() {
 
         <VStack gap="10">
           <VStack>
-            <Heading>Tech Stack</Heading>
-            <HStack wrap="wrap" gap="5">
-              <Card maxW="sm" align="center">
-                <CardHeader pb="0.5">
-                  <Img src="/redis.svg" alt="Redis logo" w="32" h="32" borderRadius="lg" />
-                </CardHeader>
-                <CardBody pt="0.5">
-                  <Stack mt="6" spacing="3">
-                    <Heading size="md">Redis</Heading>
-                    <Text>in-memory data store used by millions of developers as a secondary database</Text>
-                  </Stack>
-                </CardBody>
-              </Card>
-              <Card maxW="sm" align="center">
-                <CardHeader pb="0.5">
-                  <Img src="/postgresql.svg" alt="PostgresQL logo" w="32" h="32" borderRadius="lg" />
-                </CardHeader>
-                <CardBody pt="0.5">
-                  <Stack mt="6" spacing="3">
-                    <Heading size="md">PostgresQL</Heading>
-                    <Text>The World's Most Advanced Open Source Relational Database</Text>
-                  </Stack>
-                </CardBody>
-              </Card>
-              <Card maxW="sm" align="center">
-                <CardHeader pb="0.5">
-                  <Img src="/typeorm.svg" alt="TypeORM logo" w="32" h="32" borderRadius="lg" />
-                </CardHeader>
-                <CardBody pt="0.5">
-                  <Stack mt="6" spacing="3">
-                    <Heading size="md">TypeORM</Heading>
-                    <Text>Best lightweight Object Relational Mapping for Node.js application.</Text>
-                  </Stack>
-                </CardBody>
-              </Card>
-            </HStack>
-          </VStack>
-          <VStack>
-            <Heading>Core/Main Tech Stack</Heading>
+            <Heading>Core Tech Stack</Heading>
             <HStack wrap="wrap" gap="5">
               <Card maxW="sm" align="center">
                 <CardHeader pb="0.5">
@@ -95,6 +61,44 @@ export default function Home() {
                   <Stack mt="6" spacing="3">
                     <Heading size="md">Socket.IO</Heading>
                     <Text>Bidirectional and low-latency communication for every platform.</Text>
+                  </Stack>
+                </CardBody>
+              </Card>
+            </HStack>
+          </VStack>
+          <VStack>
+            <Heading>Data Store Stack</Heading>
+            <HStack wrap="wrap" gap="5">
+              <Card maxW="sm" align="center">
+                <CardHeader pb="0.5">
+                  <Img src="/redis.svg" alt="Redis logo" w="32" h="32" borderRadius="lg" />
+                </CardHeader>
+                <CardBody pt="0.5">
+                  <Stack mt="6" spacing="3">
+                    <Heading size="md">Redis</Heading>
+                    <Text>in-memory data store used by millions of developers as a secondary database</Text>
+                  </Stack>
+                </CardBody>
+              </Card>
+              <Card maxW="sm" align="center">
+                <CardHeader pb="0.5">
+                  <Img src="/postgresql.svg" alt="PostgresQL logo" w="32" h="32" borderRadius="lg" />
+                </CardHeader>
+                <CardBody pt="0.5">
+                  <Stack mt="6" spacing="3">
+                    <Heading size="md">PostgresQL</Heading>
+                    <Text>The World's Most Advanced Open Source Relational Database</Text>
+                  </Stack>
+                </CardBody>
+              </Card>
+              <Card maxW="sm" align="center">
+                <CardHeader pb="0.5">
+                  <Img src="/typeorm.svg" alt="TypeORM logo" w="32" h="32" borderRadius="lg" />
+                </CardHeader>
+                <CardBody pt="0.5">
+                  <Stack mt="6" spacing="3">
+                    <Heading size="md">TypeORM</Heading>
+                    <Text>Best lightweight Object Relational Mapping for Node.js application.</Text>
                   </Stack>
                 </CardBody>
               </Card>
