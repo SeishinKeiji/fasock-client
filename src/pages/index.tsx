@@ -1,4 +1,4 @@
-import { Button, Card, CardBody, CardHeader, Heading, Hide, HStack, Img, Link, Stack, Text, VStack } from "@chakra-ui/react";
+import { Button, Card, CardBody, CardHeader, Heading, Hide, HStack, Img, Link, Stack, StackDivider, Text, VStack } from "@chakra-ui/react";
 import Head from "next/head";
 import NextLink from "next/link";
 
@@ -11,13 +11,13 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Stack p="10" gap="10">
+      <Stack p="10" gap="10" divider={<StackDivider borderColor="gray.200" />}>
         <HStack alignSelf="center">
           <VStack alignItems="start" maxWidth="xl">
             <Heading>Fasock chat-app</Heading>
             <Text>Simple chat-app that make easy-to-use and secure message, anywhere, with our user-friendly chat application</Text>
             <Button colorScheme="blue">
-              <Link href="/login" as={NextLink} style={{ textDecoration: "none" }}>
+              <Link href="/chat" as={NextLink} style={{ textDecoration: "none" }}>
                 Try it now!
               </Link>
             </Button>

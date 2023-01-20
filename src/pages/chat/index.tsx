@@ -1,47 +1,9 @@
-import { Box, FormControl, FormLabel, IconButton, Input, InputGroup, InputRightElement } from "@chakra-ui/react";
 import Head from "next/head";
-import { useEffect, useState } from "react";
-import io, { Socket } from "socket.io-client";
+import { Box, Button, Heading, HStack, Img, Input, InputGroup, InputRightElement, VStack, Text, StackDivider } from "@chakra-ui/react";
+import { AiFillPlusCircle } from "react-icons/ai";
 import { FaTelegramPlane } from "react-icons/fa";
 
-let socket: Socket;
-
-type Message = {
-  author: string;
-  message: string;
-};
-
 export default function Chat() {
-  const [username, setUsername] = useState("");
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<Array<Message>>([]);
-
-  useEffect(() => {
-    socketInitializer();
-  }, []);
-
-  const sendMessage = async () => {
-    socket.emit("createdMessage", { author: username, message });
-    setMessages((currentMsg) => [...currentMsg, { author: username, message }]);
-    setMessage("");
-  };
-
-  const socketInitializer = async () => {
-    socket = io("http://localhost:4040");
-
-    socket.on("newIncomingMessage", (msg) => {
-      setMessages((currentMsg) => [...currentMsg, { author: msg.author, message: msg.message }]);
-    });
-  };
-
-  const handleKeypress: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
-    if (e.keyCode === 13) {
-      if (message) {
-        sendMessage();
-      }
-    }
-  };
-
   return (
     <>
       <Head>
@@ -50,24 +12,97 @@ export default function Chat() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Box as="main">
-        <FormControl isRequired>
-          <FormLabel>How people should call you?</FormLabel>
-          <Input type="text" onChange={(e) => setUsername(e.target.value)} />
-        </FormControl>
-        <InputGroup>
-          <InputRightElement pointerEvents="none" children={<IconButton colorScheme="blue" aria-label="Send message" icon={<FaTelegramPlane />} onClick={sendMessage} />} />
-          <Input type="text" onKeyUp={handleKeypress} onChange={(e) => setMessage(e.target.value)} placeholder="Write a message..." />
-        </InputGroup>
-
-        {messages.map((msg, i) => {
-          return (
-            <div key={i}>
-              {msg.author} : {msg.message}
-            </div>
-          );
-        })}
-      </Box>
+      <HStack alignItems="stretch" maxH="full" h="100vh" overflow="hidden">
+        <VStack as="nav" w="md" alignItems="stretch">
+          <Button rightIcon={<AiFillPlusCircle />} py="9" rounded="none" fontSize="lg">
+            Create New Group
+          </Button>
+          <VStack divider={<StackDivider borderColor="#2C323D" />} alignItems="stretch" overflow="auto">
+            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
+              <Img src="/profile.jpg" w={45} borderRadius="full" />
+              <Heading fontSize="lg">First Account</Heading>
+            </Box>
+            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
+              <Img src="/profile.jpg" w={45} borderRadius="full" />
+              <Heading fontSize="lg">Another Account</Heading>
+            </Box>
+            <Box display="flex" alignItems="center" justifyContent="space-between" px="5" py="3" gap="3" bg="#2b3942">
+              <Img src="/profile.jpg" w={45} borderRadius="full" />
+              <VStack flex={1} alignItems="start">
+                <Heading fontSize="lg">Shinigami Lorem</Heading>
+                <Text>Pong!</Text>
+              </VStack>
+              <Text alignSelf="start">10.45</Text>
+            </Box>
+            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
+              <Img src="/profile.jpg" w={45} borderRadius="full" />
+              <Heading fontSize="lg">Another Account</Heading>
+            </Box>
+            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
+              <Img src="/profile.jpg" w={45} borderRadius="full" />
+              <Heading fontSize="lg">Another Account</Heading>
+            </Box>
+            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
+              <Img src="/profile.jpg" w={45} borderRadius="full" />
+              <Heading fontSize="lg">Another Account</Heading>
+            </Box>
+            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
+              <Img src="/profile.jpg" w={45} borderRadius="full" />
+              <Heading fontSize="lg">Another Account</Heading>
+            </Box>
+            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
+              <Img src="/profile.jpg" w={45} borderRadius="full" />
+              <Heading fontSize="lg">Another Account</Heading>
+            </Box>
+            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
+              <Img src="/profile.jpg" w={45} borderRadius="full" />
+              <Heading fontSize="lg">Another Account</Heading>
+            </Box>
+          </VStack>
+        </VStack>
+        <VStack flexGrow={1} pb="1" alignItems="stretch">
+          <HStack p="3" gap="1">
+            <Img src="/profile.jpg" width={45} borderRadius="full" />
+            <Heading fontSize="lg">Shinigami Lorem</Heading>
+          </HStack>
+          <VStack bg="#2C323D" flex={1} p="5" overflow="auto">
+            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"end"}>
+              Ping!
+            </Text>
+            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"start"}>
+              Pong!
+            </Text>
+            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"start"} w="45%">
+              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
+            </Text>
+            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"end"} w="45%">
+              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
+            </Text>
+            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"start"} w="45%">
+              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
+            </Text>
+            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"end"} w="45%">
+              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
+            </Text>
+            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"start"} w="45%">
+              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
+            </Text>
+            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"end"} w="45%">
+              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
+            </Text>
+            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"start"} w="45%">
+              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
+            </Text>
+            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"end"} w="45%">
+              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
+            </Text>
+          </VStack>
+          <InputGroup>
+            <Input variant="flushed" placeholder="Enter new message..." />
+            <InputRightElement cursor="pointer" children={<FaTelegramPlane />} />
+          </InputGroup>
+        </VStack>
+      </HStack>
     </>
   );
 }
