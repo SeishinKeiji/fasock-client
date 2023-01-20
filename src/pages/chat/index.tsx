@@ -2,8 +2,9 @@ import Head from "next/head";
 import { Box, Button, Heading, HStack, Img, Input, InputGroup, InputRightElement, VStack, Text, StackDivider } from "@chakra-ui/react";
 import { AiFillPlusCircle } from "react-icons/ai";
 import { FaTelegramPlane } from "react-icons/fa";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import io, { Socket } from "socket.io-client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth.context";
 import { useRouter } from "next/router";
 
@@ -12,8 +13,14 @@ let socket: Socket;
 export default function Chat() {
   const auth = useAuth();
   const router = useRouter();
+  const selectedChat = useState(0);
+
   useEffect(() => {
-    if (!auth?.user) router.push("/login");
+    // if (!auth?.user) router.push("/login");
+    console.log("child", auth); // weird... Why is this useEffect called first? I expected the parent useEffect to be executed first.
+  }, [auth]);
+
+  useEffect(() => {
     socketInitializer();
   }, []);
 
@@ -35,61 +42,40 @@ export default function Chat() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <HStack alignItems="stretch" maxH="full" h="100vh" overflow="hidden">
-        <VStack as="nav" w="md" alignItems="stretch">
-          <HStack p="3" gap="1">
-            <Img src="/profile.jpg" width={45} borderRadius="full" />
-            <Heading fontSize="lg">{auth?.user?.username}</Heading>
+      <HStack spacing="0" alignItems="stretch" maxH="full" h="100vh" overflow="hidden" divider={<StackDivider borderColor="#2C323D" />}>
+        <VStack spacing="0" as="nav" w="md" alignItems="stretch">
+          <HStack p="3" gap="1" justifyContent="space-between">
+            <HStack>
+              <Img src="/profile.jpg" width={45} height={45} borderRadius="full" />
+              <Heading fontSize="lg">{auth?.user?.username}</Heading>
+            </HStack>
+            <BsThreeDotsVertical cursor="pointer" />
           </HStack>
           <Button rightIcon={<AiFillPlusCircle />} py="4" rounded="none" fontSize="lg">
             Create New Group
           </Button>
-          <VStack divider={<StackDivider borderColor="#2C323D" />} alignItems="stretch" overflow="auto">
-            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
-              <Img src="/profile.jpg" w={45} borderRadius="full" />
+          <VStack spacing="0" divider={<StackDivider borderColor="#2C323D" />} alignItems="stretch" overflow="auto">
+            <Box display="flex" alignItems="center" px="5" py="3" gap="3" _hover={{ bg: "#2c323d", borderY: "1px", borderColor: "#1a202c", cursor: "pointer" }}>
+              <Img src="user.jpg" w={45} borderRadius="full" />
               <Heading fontSize="lg">First Account</Heading>
             </Box>
-            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
-              <Img src="/profile.jpg" w={45} borderRadius="full" />
+            <Box display="flex" alignItems="center" px="5" py="3" gap="3" _hover={{ bg: "#2c323d", borderY: "1px", borderColor: "#1a202c", cursor: "pointer" }}>
+              <Img src="user.jpg" w={45} borderRadius="full" />
               <Heading fontSize="lg">Another Account</Heading>
             </Box>
-            <Box display="flex" alignItems="center" justifyContent="space-between" px="5" py="3" gap="3" bg="#2b3942">
-              <Img src="/profile.jpg" w={45} borderRadius="full" />
-              <VStack flex={1} alignItems="start">
+            <Box display="flex" alignItems="start" justifyContent="space-between" px="5" py="3" gap="3" bg="#2b3942">
+              <Img src="user.jpg" w={45} borderRadius="full" />
+              <VStack flex={1} alignItems="start" spacing="0">
                 <Heading fontSize="lg">Shinigami Lorem</Heading>
                 <Text>Pong!</Text>
               </VStack>
               <Text alignSelf="start">10.45</Text>
             </Box>
-            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
-              <Img src="/profile.jpg" w={45} borderRadius="full" />
-              <Heading fontSize="lg">Another Account</Heading>
-            </Box>
-            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
-              <Img src="/profile.jpg" w={45} borderRadius="full" />
-              <Heading fontSize="lg">Another Account</Heading>
-            </Box>
-            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
-              <Img src="/profile.jpg" w={45} borderRadius="full" />
-              <Heading fontSize="lg">Another Account</Heading>
-            </Box>
-            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
-              <Img src="/profile.jpg" w={45} borderRadius="full" />
-              <Heading fontSize="lg">Another Account</Heading>
-            </Box>
-            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
-              <Img src="/profile.jpg" w={45} borderRadius="full" />
-              <Heading fontSize="lg">Another Account</Heading>
-            </Box>
-            <Box display="flex" alignItems="center" px="5" py="3" gap="3">
-              <Img src="/profile.jpg" w={45} borderRadius="full" />
-              <Heading fontSize="lg">Another Account</Heading>
-            </Box>
           </VStack>
         </VStack>
-        <VStack flexGrow={1} pb="1" alignItems="stretch">
+        <VStack spacing="0" flexGrow={1} pb="1" alignItems="stretch">
           <HStack p="3" gap="1">
-            <Img src="/profile.jpg" width={45} borderRadius="full" />
+            <Img src="user.jpg" width={45} height={45} borderRadius="full" />
             <Heading fontSize="lg">Shinigami Lorem</Heading>
           </HStack>
           <VStack bg="#2C323D" flex={1} p="5" overflow="auto">
@@ -125,10 +111,15 @@ export default function Chat() {
             </Text>
           </VStack>
           <InputGroup>
-            <Input variant="flushed" placeholder="Enter new message..." />
+            <Input px="3" variant="flushed" placeholder="Enter new message..." />
             <InputRightElement cursor="pointer" children={<FaTelegramPlane />} />
           </InputGroup>
         </VStack>
+        {/* <VStack flexGrow={1} pb="1" alignItems="center" justifyContent="center" direction="row">
+          <Box>
+            <Heading>Select chat-box to start new conversation!</Heading>
+          </Box>
+        </VStack> */}
       </HStack>
     </>
   );

@@ -17,6 +17,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (localStorage.getItem("user")) setUser(JSON.parse(localStorage.getItem("user")!));
+    console.log("parent", user);
   }, []);
 
   const setUserAuthInfo = (user: IUserData) => {
