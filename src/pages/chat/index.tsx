@@ -5,13 +5,15 @@ import { FaTelegramPlane } from "react-icons/fa";
 import io, { Socket } from "socket.io-client";
 import { useEffect } from "react";
 import { useAuth } from "@/context/auth.context";
+import { useRouter } from "next/router";
 
 let socket: Socket;
 
 export default function Chat() {
   const auth = useAuth();
-
+  const router = useRouter();
   useEffect(() => {
+    if (!auth?.user) router.push("/login");
     socketInitializer();
   }, []);
 
