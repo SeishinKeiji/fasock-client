@@ -30,7 +30,7 @@ export default function Home() {
         token: data.token,
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

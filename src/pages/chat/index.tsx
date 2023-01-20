@@ -2,8 +2,29 @@ import Head from "next/head";
 import { Box, Button, Heading, HStack, Img, Input, InputGroup, InputRightElement, VStack, Text, StackDivider } from "@chakra-ui/react";
 import { AiFillPlusCircle } from "react-icons/ai";
 import { FaTelegramPlane } from "react-icons/fa";
+import io, { Socket } from "socket.io-client";
+import { useEffect } from "react";
+import { useAuth } from "@/context/auth.context";
+
+let socket: Socket;
 
 export default function Chat() {
+  const auth = useAuth();
+
+  useEffect(() => {
+    socketInitializer();
+  }, []);
+
+  async function socketInitializer() {
+    socket = io("http://localhost:4040");
+  }
+
+  const handleKeypress: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+    if (e.key === "Enter") {
+      // send message to ws server
+    }
+  };
+
   return (
     <>
       <Head>
@@ -14,7 +35,11 @@ export default function Chat() {
       </Head>
       <HStack alignItems="stretch" maxH="full" h="100vh" overflow="hidden">
         <VStack as="nav" w="md" alignItems="stretch">
-          <Button rightIcon={<AiFillPlusCircle />} py="9" rounded="none" fontSize="lg">
+          <HStack p="3" gap="1">
+            <Img src="/profile.jpg" width={45} borderRadius="full" />
+            <Heading fontSize="lg">{auth?.user?.username}</Heading>
+          </HStack>
+          <Button rightIcon={<AiFillPlusCircle />} py="4" rounded="none" fontSize="lg">
             Create New Group
           </Button>
           <VStack divider={<StackDivider borderColor="#2C323D" />} alignItems="stretch" overflow="auto">

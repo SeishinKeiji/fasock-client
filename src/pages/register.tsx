@@ -1,16 +1,36 @@
-import { Button, Flex, FormControl, FormErrorMessage, FormHelperText, FormLabel, Heading, Input, InputGroup, InputRightElement, Link, Text, VStack } from "@chakra-ui/react";
+import { Button, Flex, FormControl, FormHelperText, FormLabel, Heading, Input, InputGroup, InputRightElement, Link, Text, VStack } from "@chakra-ui/react";
 import Head from "next/head";
 import NextLink from "next/link";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import { FiLogIn } from "react-icons/fi";
 
 export default function Home() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
-  // turn on error if on submit the email field is empty
-  const [isEmailError, setIsEmailError] = useState(false);
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit: React.MouseEventHandler<HTMLButtonElement> = async (ev) => {
+    try {
+      ev.preventDefault();
+      if (!email || !username || !password) return;
+      const data = await fetch("http://localhost:4040/v1/register", {
+        body: JSON.stringify({ email, password, username }),
+        headers: {
+          Accept: "application/json, text/plain",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        method: "POST",
+      })
+        .then((value) => value.text())
+        .then((data) => JSON.parse(data));
+      router.push("/login");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <>
@@ -25,17 +45,17 @@ export default function Home() {
           <Heading>Register Form</Heading>
           <FormControl>
             <FormLabel>Username</FormLabel>
-            <Input type="text" onChange={(e) => setUsername(e.target.value)} />
+            <Input type="text" onChange={(e) => setUsername(e.target.value)} required />
           </FormControl>
-          <FormControl isRequired isInvalid={isEmailError}>
+          <FormControl isRequired>
             <FormLabel>Email address</FormLabel>
-            <Input type="email" onChange={(e) => setEmail(e.target.value)} />
-            {!isEmailError ? <FormHelperText>We'll never share your email.</FormHelperText> : <FormErrorMessage>Email is required.</FormErrorMessage>}
+            <Input type="email" onChange={(e) => setEmail(e.target.value)} required />
+            <FormHelperText>We'll never share your email.</FormHelperText>
           </FormControl>
           <FormControl isRequired>
             <FormLabel>Password</FormLabel>
             <InputGroup size="md">
-              <Input pr="4.5rem" type={show ? "text" : "password"} placeholder="Enter password" onChange={(e) => setPassword(e.target.value)} />
+              <Input pr="4.5rem" type={show ? "text" : "password"} placeholder="Enter password" onChange={(e) => setPassword(e.target.value)} required />
               <InputRightElement width="4.5rem">
                 <Button h="1.75rem" size="sm" onClick={() => setShow(!show)}>
                   {show ? "Hide" : "Show"}
@@ -43,7 +63,7 @@ export default function Home() {
               </InputRightElement>
             </InputGroup>
           </FormControl>
-          <Button leftIcon={<FiLogIn />} colorScheme="blue" variant="solid" alignSelf="stretch">
+          <Button leftIcon={<FiLogIn />} colorScheme="blue" variant="solid" alignSelf="stretch" onClick={handleSubmit}>
             Sign Up
           </Button>
           <Text>
