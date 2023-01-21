@@ -5,22 +5,22 @@ import { FaTelegramPlane } from "react-icons/fa";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import io, { Socket } from "socket.io-client";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/context/auth.context";
 import { useRouter } from "next/router";
 
+interface IUserData {
+  username: string;
+  token: string;
+}
 let socket: Socket;
 
 export default function Chat() {
-  const auth = useAuth();
   const router = useRouter();
   const selectedChat = useState(0);
+  const [user, setUser] = useState<IUserData | null>(null);
 
   useEffect(() => {
-    // if (!auth?.user) router.push("/login");
-    console.log("child", auth); // weird... Why is this useEffect called first? I expected the parent useEffect to be executed first.
-  }, [auth]);
-
-  useEffect(() => {
+    if (localStorage.getItem("user")) setUser(JSON.parse(localStorage.getItem("user")!));
+    else router.push("/login");
     socketInitializer();
   }, []);
 
@@ -47,7 +47,7 @@ export default function Chat() {
           <HStack p="3" gap="1" justifyContent="space-between">
             <HStack>
               <Img src="/profile.jpg" width={45} height={45} borderRadius="full" />
-              <Heading fontSize="lg">{auth?.user?.username}</Heading>
+              <Heading fontSize="lg">{user?.username}</Heading>
             </HStack>
             <BsThreeDotsVertical cursor="pointer" />
           </HStack>

@@ -1,4 +1,3 @@
-import { useAuth } from "@/context/auth.context";
 import { Button, Flex, FormControl, FormErrorMessage, FormLabel, Heading, Input, InputGroup, InputRightElement, Link, Text, VStack } from "@chakra-ui/react";
 import Head from "next/head";
 import NextLink from "next/link";
@@ -11,7 +10,6 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
-  const auth = useAuth();
 
   const handleSubmit: React.MouseEventHandler<HTMLButtonElement> = async (ev) => {
     try {
@@ -27,10 +25,13 @@ export default function Home() {
         .then((value) => value.text())
         .then((data) => JSON.parse(data));
 
-      auth?.setUserAuthInfo({
-        username: data.username,
-        token: data.token,
-      });
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          username: data.username,
+          token: data.token,
+        })
+      );
       router.push("/chat");
     } catch (error) {
       console.error(error);
