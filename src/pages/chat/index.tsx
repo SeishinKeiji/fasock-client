@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { Box, Button, Heading, HStack, Img, Input, InputGroup, InputRightElement, VStack, Text, StackDivider } from "@chakra-ui/react";
+import { Box, Button, Heading, HStack, Img, Input, InputGroup, InputRightElement, VStack, Text, StackDivider, useToast, CircularProgress } from "@chakra-ui/react";
 import { AiFillPlusCircle } from "react-icons/ai";
 import { FaTelegramPlane } from "react-icons/fa";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -7,30 +7,200 @@ import io, { Socket } from "socket.io-client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-interface IUserData {
+export interface ILoggedInData {
+  connected?: boolean;
   username: string;
   token: string;
 }
+
+interface IMessage {
+  content: string;
+  fromSelf: boolean;
+}
+
+export interface IUserData {
+  username: string;
+  userID: string;
+}
+
+export interface IUser extends IUserData {
+  connected: boolean;
+  messages: Array<IMessage>;
+  hasNewMessages: boolean;
+  self: boolean;
+}
+
 let socket: Socket;
 
 export default function Chat() {
+  const toast = useToast();
+  const [csr, setCsr] = useState(false);
   const router = useRouter();
-  const selectedChat = useState(0);
-  const [user, setUser] = useState<IUserData | null>(null);
+  const [selectedChat, setSelectedChat] = useState<string>();
+  const [message, setMessage] = useState("");
+  const [loggedInUser, setLoggedInUser] = useState<ILoggedInData>();
+  const [users, setUsers] = useState<IUser[]>([]);
 
   useEffect(() => {
-    if (localStorage.getItem("user")) setUser(JSON.parse(localStorage.getItem("user")!));
+    if (localStorage.getItem("user")) setLoggedInUser(JSON.parse(localStorage.getItem("user")!));
     else router.push("/login");
-    socketInitializer();
+    setCsr(true);
+
+    return () => {
+      if (socket) socket.disconnect();
+    };
   }, []);
 
+  useEffect(() => {
+    if (csr) socketInitializer();
+  }, [csr]);
+
+  const initReactiveProperties = () => ({
+    connected: true,
+    messages: [],
+    hasNewMessages: false,
+  });
+
   async function socketInitializer() {
-    socket = io("http://localhost:4040");
+    socket = io("http://localhost:4040", { autoConnect: false });
+    socket.auth = {
+      user: loggedInUser,
+    };
+    socket.connect();
+
+    socket.on("connect", () => {
+      toast({
+        title: "Notification.",
+        // another pending description: "User with name \"lorem\" has been logged out"
+        description: "Connection to websocket server has been established.",
+        status: "success",
+        duration: 9000,
+        isClosable: true,
+      });
+      setLoggedInUser((user) => user && { ...user, connected: true });
+    });
+
+    socket.onAny((event, ...args) => {
+      console.log(event, args);
+    });
+
+    socket.on("disconnect", () => {
+      setLoggedInUser((user) => user && { ...user, connected: false });
+    });
+
+    socket.on("user disconnected", (id) => {
+      setUsers((currUsers) => {
+        return currUsers.map((user) => {
+          if (user.userID === id) return { ...user, connected: false };
+          else return user;
+        });
+      });
+    });
+
+    // socket.on("users", (listUsers: IUser[]) => {
+    //   listUsers = listUsers.map((user: any) => ({
+    //     ...user,
+    //     self: user.userID === socket.id,
+    //     ...initReactiveProperties(),
+    //   }));
+    //   setUsers(
+    //     listUsers.sort((a, b) => {
+    //       if (a.self) return -1;
+    //       if (b.self) return 1;
+    //       if (a.username < b.username) return -1;
+    //       return a.username > b.username ? 1 : 0;
+    //     })
+    //   );
+    // });
+
+    socket.on("user connected", (incomingUser: IUserData) => {
+      setUsers((currUsers) => [
+        ...currUsers,
+        {
+          ...incomingUser,
+          ...initReactiveProperties(),
+          self: false,
+        },
+      ]);
+    });
+    socket.on("users", (users: IUserData[]) => {
+      setUsers((currUsers) => [
+        ...currUsers,
+        ...users.map((user) => ({
+          ...user,
+          ...initReactiveProperties(),
+          self: user.userID === socket.id,
+        })),
+      ]);
+    });
+
+    socket.on("private message", ({ content, from }: Record<string, string>) => {
+      setUsers((currUsers) => {
+        return currUsers.map((user) => {
+          if (user.userID === from) {
+            user.messages = [
+              ...user.messages,
+              {
+                content,
+                fromSelf: false,
+              },
+            ];
+            if (user.userID !== selectedChat) user.hasNewMessages = true;
+            return user;
+          } else {
+            return user;
+          }
+        });
+      });
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error(err);
+      toast({
+        title: "Notification.",
+        description: "Connection lost. Please try again later.",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
+    });
   }
 
+  const sendMessage = () => {
+    socket.emit("private message", {
+      content: message,
+      to: selectedChat,
+    });
+    setUsers((currUsers) => [
+      ...currUsers.map((user) => {
+        if (user.userID === selectedChat) {
+          return {
+            ...user,
+            messages: [
+              ...user.messages,
+              {
+                content: message,
+                fromSelf: true,
+              },
+            ],
+          };
+        }
+        return user;
+      }),
+    ]);
+    setMessage("");
+  };
+
   const handleKeypress: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
-    if (e.key === "Enter") {
-      // send message to ws server
+    if (e.key === "Enter" && message) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+  const handleSubmitText: React.MouseEventHandler<SVGElement> = (e) => {
+    if (message) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
@@ -47,79 +217,72 @@ export default function Chat() {
           <HStack p="3" gap="1" justifyContent="space-between">
             <HStack>
               <Img src="/profile.jpg" width={45} height={45} borderRadius="full" />
-              <Heading fontSize="lg">{user?.username}</Heading>
+              <VStack spacing="0" alignItems="start">
+                <Heading fontSize="lg">{loggedInUser?.username ?? "Unauthenticated"}</Heading>
+                <Text>{loggedInUser?.connected ? "Online" : "Offline"}</Text>
+              </VStack>
             </HStack>
             <BsThreeDotsVertical cursor="pointer" />
           </HStack>
           <Button rightIcon={<AiFillPlusCircle />} py="4" rounded="none" fontSize="lg">
             Create New Group
           </Button>
-          <VStack spacing="0" divider={<StackDivider borderColor="#2C323D" />} alignItems="stretch" overflow="auto">
+          {/* <VStack spacing="0" divider={<StackDivider borderColor="#2C323D" />} alignItems="stretch" overflow="auto">
             <Box display="flex" alignItems="center" px="5" py="3" gap="3" _hover={{ bg: "#2c323d", borderY: "1px", borderColor: "#1a202c", cursor: "pointer" }}>
               <Img src="user.jpg" w={45} borderRadius="full" />
-              <Heading fontSize="lg">First Account</Heading>
-            </Box>
-            <Box display="flex" alignItems="center" px="5" py="3" gap="3" _hover={{ bg: "#2c323d", borderY: "1px", borderColor: "#1a202c", cursor: "pointer" }}>
-              <Img src="user.jpg" w={45} borderRadius="full" />
-              <Heading fontSize="lg">Another Account</Heading>
+              <Heading fontSize="lg">Dummy Chat</Heading>
             </Box>
             <Box display="flex" alignItems="start" justifyContent="space-between" px="5" py="3" gap="3" bg="#2b3942">
               <Img src="user.jpg" w={45} borderRadius="full" />
               <VStack flex={1} alignItems="start" spacing="0">
-                <Heading fontSize="lg">Shinigami Lorem</Heading>
+                <Heading fontSize="lg">Selected Chat</Heading>
                 <Text>Pong!</Text>
               </VStack>
               <Text alignSelf="start">10.45</Text>
             </Box>
+          </VStack> */}
+          <VStack spacing="0" divider={<StackDivider borderColor="#2C323D" />} alignItems="stretch" overflow="auto">
+            {users
+              ?.filter((user) => !user.self)
+              .map((user, i) => (
+                <Box key={i} display="flex" alignItems="center" px="5" py="3" gap="3" _hover={{ bg: "#2c323d", borderY: "1px", borderColor: "#1a202c", cursor: "pointer" }} onClick={() => setSelectedChat(user.userID)}>
+                  <Img src="user.jpg" w={45} borderRadius="full" />
+                  <Heading fontSize="lg">
+                    <CircularProgress value={100} color={`${user.connected ? "green" : "red"}.400`} size="15px" thickness="30px" /> {user.username}
+                  </Heading>
+                </Box>
+              ))}
           </VStack>
         </VStack>
-        <VStack spacing="0" flexGrow={1} pb="1" alignItems="stretch">
-          <HStack p="3" gap="1">
-            <Img src="user.jpg" width={45} height={45} borderRadius="full" />
-            <Heading fontSize="lg">Shinigami Lorem</Heading>
-          </HStack>
-          <VStack bg="#2C323D" flex={1} p="5" overflow="auto">
-            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"end"}>
-              Ping!
-            </Text>
-            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"start"}>
-              Pong!
-            </Text>
-            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"start"} w="45%">
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
-            </Text>
-            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"end"} w="45%">
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
-            </Text>
-            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"start"} w="45%">
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
-            </Text>
-            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"end"} w="45%">
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
-            </Text>
-            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"start"} w="45%">
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
-            </Text>
-            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"end"} w="45%">
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
-            </Text>
-            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"start"} w="45%">
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
-            </Text>
-            <Text bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={"end"} w="45%">
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Sint nemo illo facilis tempora labore hic beatae debitis dolor saepe explicabo in accusantium possimus, veniam inventore numquam veritatis incidunt sapiente officia?
-            </Text>
+        {selectedChat ? (
+          <VStack spacing="0" flexGrow={1} pb="1" alignItems="stretch">
+            <HStack p="3" gap="1">
+              <Img src="user.jpg" width={45} height={45} borderRadius="full" />
+              <Heading fontSize="lg">{users.find((user) => user.userID === selectedChat)?.username}</Heading>
+            </HStack>
+            <VStack bg="#2C323D" flex={1} p="5" overflow="auto">
+              {users
+                .find((user) => user.userID === selectedChat)
+                ?.messages.map((message, i) => {
+                  return (
+                    <Text key={i} bg="ThreeDDarkShadow" rounded="md" p="2" alignSelf={message.fromSelf ? "end" : "start"} maxW="45%">
+                      {message.content}
+                    </Text>
+                  );
+                })}
+            </VStack>
+            <InputGroup>
+              <Input px="3" variant="flushed" placeholder="Enter new message..." value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={handleKeypress} />
+              <InputRightElement cursor="pointer" children={<FaTelegramPlane onClick={handleSubmitText} />} />
+            </InputGroup>
           </VStack>
-          <InputGroup>
-            <Input px="3" variant="flushed" placeholder="Enter new message..." />
-            <InputRightElement cursor="pointer" children={<FaTelegramPlane />} />
-          </InputGroup>
-        </VStack>
-        {/* <VStack flexGrow={1} pb="1" alignItems="center" justifyContent="center" direction="row">
-          <Box>
-            <Heading>Select chat-box to start new conversation!</Heading>
-          </Box>
-        </VStack> */}
+        ) : (
+          <VStack flexGrow={1} pb="1" alignItems="center" justifyContent="center" direction="row">
+            <Box>
+              <Heading>Select chat-box to start new conversation!</Heading>
+            </Box>
+          </VStack>
+        )}
       </HStack>
     </>
   );
