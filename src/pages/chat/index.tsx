@@ -71,7 +71,7 @@ export default function Chat() {
     socket.on("connect", () => {
       toast({
         title: "Notification.",
-        // another pending description: "User with name \"lorem\" has been logged out"
+        // another pending description: "User with name \"lorem\" has been logged out"?
         description: "Connection to websocket server has been established.",
         status: "success",
         duration: 9000,
@@ -96,22 +96,6 @@ export default function Chat() {
         });
       });
     });
-
-    // socket.on("users", (listUsers: IUser[]) => {
-    //   listUsers = listUsers.map((user: any) => ({
-    //     ...user,
-    //     self: user.userID === socket.id,
-    //     ...initReactiveProperties(),
-    //   }));
-    //   setUsers(
-    //     listUsers.sort((a, b) => {
-    //       if (a.self) return -1;
-    //       if (b.self) return 1;
-    //       if (a.username < b.username) return -1;
-    //       return a.username > b.username ? 1 : 0;
-    //     })
-    //   );
-    // });
 
     socket.on("user connected", (incomingUser: IUserData) => {
       setUsers((currUsers) => [
@@ -227,31 +211,31 @@ export default function Chat() {
           <Button rightIcon={<AiFillPlusCircle />} py="4" rounded="none" fontSize="lg">
             Create New Group
           </Button>
-          {/* <VStack spacing="0" divider={<StackDivider borderColor="#2C323D" />} alignItems="stretch" overflow="auto">
-            <Box display="flex" alignItems="center" px="5" py="3" gap="3" _hover={{ bg: "#2c323d", borderY: "1px", borderColor: "#1a202c", cursor: "pointer" }}>
-              <Img src="user.jpg" w={45} borderRadius="full" />
-              <Heading fontSize="lg">Dummy Chat</Heading>
-            </Box>
-            <Box display="flex" alignItems="start" justifyContent="space-between" px="5" py="3" gap="3" bg="#2b3942">
-              <Img src="user.jpg" w={45} borderRadius="full" />
-              <VStack flex={1} alignItems="start" spacing="0">
-                <Heading fontSize="lg">Selected Chat</Heading>
-                <Text>Pong!</Text>
-              </VStack>
-              <Text alignSelf="start">10.45</Text>
-            </Box>
-          </VStack> */}
           <VStack spacing="0" divider={<StackDivider borderColor="#2C323D" />} alignItems="stretch" overflow="auto">
             {users
               ?.filter((user) => !user.self)
-              .map((user, i) => (
-                <Box key={i} display="flex" alignItems="center" px="5" py="3" gap="3" _hover={{ bg: "#2c323d", borderY: "1px", borderColor: "#1a202c", cursor: "pointer" }} onClick={() => setSelectedChat(user.userID)}>
-                  <Img src="user.jpg" w={45} borderRadius="full" />
-                  <Heading fontSize="lg">
-                    <CircularProgress value={100} color={`${user.connected ? "green" : "red"}.400`} size="15px" thickness="30px" /> {user.username}
-                  </Heading>
-                </Box>
-              ))}
+              .map((user, i) =>
+                selectedChat ? (
+                  <Box display="flex" alignItems="start" justifyContent="space-between" px="5" py="3" gap="3" bg="#2b3942">
+                    <Img src="user.jpg" w={45} borderRadius="full" />
+                    <VStack flex={1} alignItems="start" spacing="0">
+                      <Heading fontSize="lg">{user.username}</Heading>
+                      <Text>
+                        {user.messages.pop()?.content} - {user.hasNewMessages ?? "i"}
+                      </Text>
+                    </VStack>
+                    {/* last message timestamp */}
+                    <Text alignSelf="start">10.45</Text>
+                  </Box>
+                ) : (
+                  <Box key={i} display="flex" alignItems="center" px="5" py="3" gap="3" _hover={{ bg: "#2c323d", borderY: "1px", borderColor: "#1a202c", cursor: "pointer" }} onClick={() => setSelectedChat(user.userID)}>
+                    <Img src="user.jpg" w={45} borderRadius="full" />
+                    <Heading fontSize="lg">
+                      <CircularProgress value={100} color={`${user.connected ? "green" : "red"}.400`} size="15px" thickness="30px" /> {user.username}
+                    </Heading>
+                  </Box>
+                )
+              )}
           </VStack>
         </VStack>
         {selectedChat ? (
