@@ -216,12 +216,14 @@ export default function Chat() {
               ?.filter((user) => !user.self)
               .map((user, i) =>
                 selectedChat ? (
-                  <Box display="flex" alignItems="start" justifyContent="space-between" px="5" py="3" gap="3" bg="#2b3942">
+                  <Box key={i} display="flex" alignItems="start" justifyContent="space-between" px="5" py="3" gap="3" bg="#2b3942" onClick={() => setSelectedChat(user.userID)}>
                     <Img src="user.jpg" w={45} borderRadius="full" />
                     <VStack flex={1} alignItems="start" spacing="0">
-                      <Heading fontSize="lg">{user.username}</Heading>
+                      <Heading fontSize="lg">
+                        <CircularProgress value={100} color={`${user.connected ? "green" : "red"}.400`} size="15px" thickness="30px" /> {user.username}
+                      </Heading>
                       <Text>
-                        {user.messages.pop()?.content} - {user.hasNewMessages ?? "i"}
+                        {user.messages.slice().pop()?.content} - {user.hasNewMessages ?? "i"}
                       </Text>
                     </VStack>
                     {/* last message timestamp */}
