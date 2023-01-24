@@ -21,13 +21,19 @@ interface IMessage {
 export interface IUserData {
   username: string;
   userID: string;
+  connected: boolean;
 }
 
 export interface IUser extends IUserData {
-  connected: boolean;
   messages: Array<IMessage>;
   hasNewMessages: boolean;
   self: boolean;
+}
+
+declare module "socket.io-client" {
+  interface Socket {
+    userID: string;
+  }
 }
 
 let socket: Socket;
@@ -36,15 +42,15 @@ export default function Chat() {
   const toast = useToast();
   const [csr, setCsr] = useState(false);
   const router = useRouter();
-  const [selectedChat, setSelectedChat] = useState<string>();
+  const [selectedChat, setSelectedChat] = useState<string>("");
   const [message, setMessage] = useState("");
   const [loggedInUser, setLoggedInUser] = useState<ILoggedInData>();
   const [users, setUsers] = useState<IUser[]>([]);
 
   useEffect(() => {
-    if (localStorage.getItem("user")) setLoggedInUser(JSON.parse(localStorage.getItem("user")!));
+    const loadUser = localStorage.getItem("user");
+    if (loadUser) setLoggedInUser(JSON.parse(loadUser)), setCsr(true);
     else router.push("/login");
-    setCsr(true);
 
     return () => {
       if (socket) socket.disconnect();
@@ -56,7 +62,6 @@ export default function Chat() {
   }, [csr]);
 
   const initReactiveProperties = () => ({
-    connected: true,
     messages: [],
     hasNewMessages: false,
   });
@@ -64,7 +69,8 @@ export default function Chat() {
   async function socketInitializer() {
     socket = io("http://localhost:4040", { autoConnect: false });
     socket.auth = {
-      user: loggedInUser,
+      sessionID: loggedInUser?.token,
+      username: loggedInUser?.username,
     };
     socket.connect();
 
@@ -78,6 +84,11 @@ export default function Chat() {
         isClosable: true,
       });
       setLoggedInUser((user) => user && { ...user, connected: true });
+    });
+
+    socket.on("session", ({ sessionID, userID }: Record<string, string>) => {
+      socket.auth = { sessionID, username: loggedInUser?.username };
+      socket.userID = userID;
     });
 
     socket.onAny((event, ...args) => {
@@ -98,42 +109,56 @@ export default function Chat() {
     });
 
     socket.on("user connected", (incomingUser: IUserData) => {
-      setUsers((currUsers) => [
-        ...currUsers,
-        {
-          ...incomingUser,
-          ...initReactiveProperties(),
-          self: false,
-        },
-      ]);
+      setUsers((currUsers) => {
+        const hasBeenAdded = currUsers.findIndex((currUser) => currUser.userID === incomingUser.userID);
+
+        return hasBeenAdded >= 0
+          ? currUsers.map((currUser, i) => (i === hasBeenAdded ? { ...currUser, connected: true } : currUser))
+          : [
+              ...currUsers,
+              {
+                ...incomingUser,
+                ...initReactiveProperties(),
+                self: false,
+              },
+            ];
+      });
     });
-    socket.on("users", (users: IUserData[]) => {
-      setUsers((currUsers) => [
-        ...currUsers,
-        ...users.map((user) => ({
-          ...user,
-          ...initReactiveProperties(),
-          self: user.userID === socket.id,
-        })),
-      ]);
+    socket.on("users", (fetchedUsers: IUser[]) => {
+      setUsers((currUsers) => {
+        let hasBeenAdded = -1;
+        const condition = hasBeenAdded >= 0;
+        fetchedUsers = fetchedUsers.map((user) => {
+          hasBeenAdded = currUsers.findIndex((currUser) => currUser.userID === user.userID);
+
+          return {
+            ...user,
+            ...initReactiveProperties(),
+            self: user.userID === socket.userID,
+          };
+        });
+        return condition ? currUsers.map((currUser, i) => (i === hasBeenAdded ? { ...currUser, connected: true } : currUser)) : fetchedUsers;
+      });
     });
 
-    socket.on("private message", ({ content, from }: Record<string, string>) => {
+    socket.on("private message", ({ content, from, to }: Record<string, string>) => {
       setUsers((currUsers) => {
         return currUsers.map((user) => {
-          if (user.userID === from) {
+          const fromSelf = socket.userID === from;
+
+          if (user.userID === (fromSelf ? to : from)) {
             user.messages = [
               ...user.messages,
               {
                 content,
-                fromSelf: false,
+                fromSelf,
               },
             ];
+
             if (user.userID !== selectedChat) user.hasNewMessages = true;
             return user;
-          } else {
-            return user;
           }
+          return user;
         });
       });
     });
@@ -215,25 +240,46 @@ export default function Chat() {
             {users
               ?.filter((user) => !user.self)
               .map((user, i) =>
-                selectedChat ? (
-                  <Box key={i} display="flex" alignItems="start" justifyContent="space-between" px="5" py="3" gap="3" bg="#2b3942" onClick={() => setSelectedChat(user.userID)}>
+                selectedChat === user.userID ? (
+                  <Box key={user.userID} display="flex" alignItems="start" justifyContent="space-between" px="5" py="3" gap="3" bg="#2b3942">
                     <Img src="user.jpg" w={45} borderRadius="full" />
                     <VStack flex={1} alignItems="start" spacing="0">
                       <Heading fontSize="lg">
                         <CircularProgress value={100} color={`${user.connected ? "green" : "red"}.400`} size="15px" thickness="30px" /> {user.username}
                       </Heading>
                       <Text>
-                        {user.messages.slice().pop()?.content} - {user.hasNewMessages ?? "i"}
+                        {user.messages.slice().pop()?.content} {user.hasNewMessages && "- !"}
                       </Text>
                     </VStack>
                     {/* last message timestamp */}
                     <Text alignSelf="start">10.45</Text>
                   </Box>
                 ) : (
-                  <Box key={i} display="flex" alignItems="center" px="5" py="3" gap="3" _hover={{ bg: "#2c323d", borderY: "1px", borderColor: "#1a202c", cursor: "pointer" }} onClick={() => setSelectedChat(user.userID)}>
+                  <Box
+                    key={user.userID}
+                    display="flex"
+                    alignItems="center"
+                    px="5"
+                    py="3"
+                    gap="3"
+                    _hover={{ bg: "#2c323d", borderY: "1px", borderColor: "#1a202c", cursor: "pointer" }}
+                    onClick={() => {
+                      setSelectedChat(user.userID);
+                      setUsers((currUsers) =>
+                        currUsers.map((currUser) =>
+                          currUser.userID === user.userID
+                            ? {
+                                ...currUser,
+                                hasNewMessages: false,
+                              }
+                            : currUser
+                        )
+                      );
+                    }}
+                  >
                     <Img src="user.jpg" w={45} borderRadius="full" />
                     <Heading fontSize="lg">
-                      <CircularProgress value={100} color={`${user.connected ? "green" : "red"}.400`} size="15px" thickness="30px" /> {user.username}
+                      <CircularProgress value={100} color={`${user.connected ? "green" : "red"}.400`} size="15px" thickness="30px" /> {user.username} {user.hasNewMessages && "- !"}
                     </Heading>
                   </Box>
                 )
